@@ -727,6 +727,20 @@ public static class MiniJsonExtensions
 		return finalString;
 	}
 
+    public static string toArrayString(this List<string> list)
+    {
+        string finalString = "[";
+        foreach (string str in list)
+        {
+            finalString += "\"" + str + "\"";
+            if (str != list[list.Count - 1])
+            {
+                finalString += ",";
+            }
+        }
+        return finalString + "]";
+    }
+
 	public static string toJson(this Hashtable obj)
 	{
 		return MiniJSON.jsonEncode(obj).Replace("\"[", "[").Replace("\\", "").Replace("]\"", "]");

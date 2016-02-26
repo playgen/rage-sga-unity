@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine;
 
 namespace SocialGamification
@@ -46,6 +47,22 @@ namespace SocialGamification
 		{
 		}
 
+        public Match(Match clone)
+        {
+            this.id = clone.id;
+            this.idTournament = clone.idTournament;
+            this.title = clone.title;
+            this.roundsCount = clone.roundsCount;
+            this.currentRound = clone.currentRound;
+            this.dateCreation = clone.dateCreation;
+            this.dateExpire = clone.dateExpire;
+            this._deletedUsers = new List<string>(clone._deletedUsers);
+            this._users = new List<MatchActor>(clone._users);
+            this._rounds = new List<MatchRoundData>(clone._rounds);
+            this._finished = clone._finished;
+            this._quickMatch = clone._quickMatch;
+        }
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SocialGamification.Match"/> class.
 		/// </summary>
@@ -72,6 +89,26 @@ namespace SocialGamification
 		{
 			FromHashtable(jsonString.hashtableFromJson());
 		}
+
+        /// <summary>
+        /// Makes a copy of the current match
+        /// </summary>
+        public void Duplicate(Action<Match> callback)
+        {
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("actors", _users.Select(user => user.idAccount).ToList().toArrayString());
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/actors"), form, (string text, string error) =>
+            {
+                Hashtable hash = text.hashtableFromJson();
+                if (hash != null)
+                {
+                    Match match = new Match(hash);
+                    callback(match);
+                }
+
+            });
+        }
 
 		/// <summary>
 		/// Initialize the object from a hashtable.
