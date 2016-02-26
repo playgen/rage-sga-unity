@@ -372,9 +372,9 @@ namespace SocialGamification
 		}
 
 		/// <summary>
-		/// End the current Match
+		/// Finish the current Match when a player quits
 		/// </summary>
-		public void End()
+		public void Quit()
 		{
             if (matchEnd)
             {
@@ -405,12 +405,46 @@ namespace SocialGamification
 			}, "PUT");
 		}
 
-		/// <summary>
-		/// Send the specified score.
+        /// <summary>
+		/// End the current Match
 		/// </summary>
-		/// <param name="score">Score.</param>
-		/// <param name="callback">Callback.</param>
-		public void Score(float score, Action<bool, string> callback)
+		public void End()
+        {
+            if (matchEnd)
+            {
+                Debug.Log("Already Ending Match");
+                return;
+            }
+            else
+            {
+                matchEnd = true;
+            }
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("Id", id);
+            form.Add("TournamentId", idTournament);
+            form.Add("IsFinished", "true");
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id), form, (string text, string error) =>
+            {
+                matchEnd = false;
+                bool success = false;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result != null && result.ContainsKey("id"))
+                    {
+                        success = true;
+                    }
+                }
+                _finished = success;
+            }, "PUT");
+        }
+
+        /// <summary>
+        /// Send the specified score.
+        /// </summary>
+        /// <param name="score">Score.</param>
+        /// <param name="callback">Callback.</param>
+        public void Score(float score, Action<bool, string> callback)
 		{
             if (matchScore)
             {
