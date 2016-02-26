@@ -286,6 +286,11 @@ namespace SocialGamification
 		/// <value><c>true</c> if is authenticated; otherwise, <c>false</c>.</value>
 		public bool isAuthenticated { get { return (localUser != null && localUser.authenticated); } }
 
+        /// <summary>
+        /// Gets all the ItemTypes stored in the database
+        /// </summary>
+        public List<ItemType> ItemTypes { get; set; }
+
 		/// <summary>
 		/// Gets the server info.
 		/// </summary>
@@ -337,6 +342,47 @@ namespace SocialGamification
 				}
 			});
 		}
+
+        /// <summary>
+        /// Get all the relevant information from the server. Should be called once after login.
+        /// </summary>
+        public void Init()
+        {
+            GetItemTypes();
+        }
+
+        /// <summary>
+        /// Gets the item types.
+        /// </summary>
+        public virtual void GetItemTypes()
+        {
+            if (ItemTypes == null)
+            {
+                ItemTypes = new List<ItemType>();
+            }
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/items/types"), null, (string text, string error) =>
+            {
+                Debug.Log("Get ItemTypes: " + text);
+                if (string.IsNullOrEmpty(error))
+                {
+                    ArrayList list = text.arrayListFromJson();
+                    if (list != null)
+                    {
+                        foreach (Hashtable itemhash in list)
+                        {
+                            if (itemhash.ContainsKey("name") && itemhash["name"] != null)
+                            {
+                                ItemType itemType = new ItemType(itemhash);
+                                ItemTypes.Add(itemType);
+                            }
+                        }
+                    }
+                }
+
+                Debug.Log(ItemTypes);
+            });
+        }
 
 		private void OnEnable()
 		{

@@ -22,6 +22,10 @@ namespace SocialGamification
 
 		public List<ProfilePlatform> platforms { get { return _platforms; } }
 
+        private List<Item> _inventory;
+
+        public List<Item> inventory { get { return _inventory; } }
+
 		/// <summary>
 		/// Gets the identifier value as string.
 		/// </summary>
@@ -80,6 +84,52 @@ namespace SocialGamification
 			}
 		}
 
+
+        public void Init()
+        {
+            _inventory = new List<Item>();
+            GetInventory();
+        }
+
+        public virtual void GetInventory()
+        {
+            if (_inventory != null)
+            {
+
+
+                SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/items"), null, (string text, string error) =>
+                {
+                    Debug.Log("Get Items: " + text);
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        ArrayList list = text.arrayListFromJson();
+                        if (list != null)
+                        {
+                            foreach (Hashtable itemhash in list)
+                            {
+                                if (itemhash.ContainsKey("id") && itemhash["id"] != null)
+                                {
+                                    Item item = new Item(itemhash);
+                                    _inventory.Add(item);
+                                }
+                            }
+                        }
+                    }
+
+                    Debug.Log(_inventory);
+                });
+            }
+        }
+
+        //private List<Item> GetInventory()
+        //{
+        //    if (_inventory != null)
+        //    {
+        //        return _inventory;
+        //    }
+
+        //}
+
 		/// <summary>
 		/// Gets or sets the image.
 		/// </summary>
@@ -111,6 +161,12 @@ namespace SocialGamification
 		/// The custom data.
 		/// </summary>
 		public Hashtable customData = new Hashtable();
+
+		/// <summary>
+		/// The item types.
+		/// </summary>
+		public List<ItemType> itemTypes = new List<ItemType> ();
+
 
 		public Profile()
 		{
@@ -202,7 +258,107 @@ namespace SocialGamification
 						}
 					}
 				}
+
+                //GetItemTypes();
+
 			}
+		}
+
+		/// <summary>
+		/// Gets the item types.
+		/// </summary>
+        //public virtual void GetItemTypes(){
+        //    SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/items/types"), null, (string text, string error) =>
+        //                                                      {
+        //        Debug.Log("Get ItemTypes: "+text);
+        //        if (string.IsNullOrEmpty(error))
+        //        {
+        //            items.Clear();
+					
+        //            ArrayList list = text.arrayListFromJson();
+        //            if (list != null)
+        //            {
+        //                foreach (Hashtable itemhash in list)
+        //                {
+        //                    if (itemhash.ContainsKey("name") && itemhash["name"] != null)
+        //                    {
+        //                        ItemType itemType = new ItemType(itemhash);
+        //                        itemTypes.Add(itemType);
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        AddItemType();
+
+        //    });
+        //}
+
+		/// <summary>
+		/// Adds the type of the item.
+		/// </summary>
+        //public virtual void AddItemType(){
+        //    // Test - Create New Item
+        //    ItemType itemType = new ItemType();
+        //    itemType.name = "ItemX";
+        //    itemType.image = "ItemXImage";
+        //    itemType.Save((bool success, string error)=> {
+        //        if(success){
+        //            Debug.Log("ItemType Saved Successfully");
+        //        }else{
+        //            Debug.Log("ItemType was not saved." + error);
+        //        }
+        //        itemTypes.Add(itemType);
+        //        GetItems();
+        //    });
+        //}
+
+		/// <summary>
+		/// Gets the items.
+		/// </summary>
+		public virtual void GetItems(){
+			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/items/"), null, (string text, string error) =>
+			                                                  {
+				Debug.Log("Get Item: "+text);
+				if (string.IsNullOrEmpty(error))
+				{
+                    //items.Clear();
+					
+					ArrayList list = text.arrayListFromJson();
+					if (list != null)
+					{
+						foreach (Hashtable itemhash in list)
+						{
+							if (itemhash.ContainsKey("itemTypeId") && itemhash["itemTypeId"] != null)
+							{
+								Item matchItem = new Item(itemhash);
+                                //items.Add(matchItem);
+							}
+						}
+					}
+				}
+				AddItem();
+			});
+
+		}
+
+		/// <summary>
+		/// Adds the item.
+		/// </summary>
+		public virtual void AddItem(){
+			// Test - Create New Item
+			Item item = new Item();
+			item.quantity = 1;
+			item.itemTypeId = itemTypes [0].id;
+			item.itemTypeName = itemTypes[0].name;
+			item.Save((bool success, string error)=> {
+				if(success){
+					Debug.Log("Item Saved Successfully");
+				}else{
+					Debug.Log("Item was not saved." + error);
+				}
+			});
+            //items.Add(item);
 		}
 	}
 }
