@@ -14,7 +14,7 @@ namespace SocialGamification
 		public string idAccount = "";
 		public Hashtable customData = new Hashtable();
 		public float score = 0;
-		public DateTime? dateScore = null;
+        public DateTime? dateScore = null;
 		public Profile user = null;
 
 		private List<MatchRound> _rounds = new List<MatchRound>();
@@ -65,9 +65,9 @@ namespace SocialGamification
 				idMatch = hash["matchId"].ToString();
 			}
 
-			if (hash.ContainsKey("accountId") && hash["accountId"] != null)
+			if (hash.ContainsKey("actorId") && hash["actorId"] != null)
 			{
-				idAccount = hash["accountId"].ToString();
+				idAccount = hash["actorId"].ToString();
 			}
 
 			if (hash.ContainsKey("customData") && hash["customData"] != null && hash["customData"] is Hashtable)
