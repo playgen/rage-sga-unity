@@ -30,6 +30,9 @@ namespace SocialGamification
         public DateTime? updatedTime = null;
         public DateTime? createdTime = null;
 
+        private static bool creatingGoal = false;
+        private static bool loadingGoal = false;
+
         public Goal()
         {
         }
@@ -89,7 +92,7 @@ namespace SocialGamification
 
             if (hash.ContainsKey("concern") && hash["concern"] != null)
             {
-                concern = new ConcernMatrix(hash["concern"].ToString());
+                concern = new ConcernMatrix((Hashtable)hash["concern"]);
             }
 
             if (hash.ContainsKey("rewardResourceId") && hash["rewardResourceId"] != null)
@@ -99,7 +102,7 @@ namespace SocialGamification
 
             if (hash.ContainsKey("rewardResource") && hash["rewardResource"] != null)
             {
-                rewardResource = new RewardResourceMatrix(hash["rewardResource"].ToString());
+                rewardResource = new RewardResourceMatrix((Hashtable)hash["rewardResource"]);
             }
 
            if (hash.ContainsKey("feedbackId") && hash["feedbackId"] != null)
@@ -109,7 +112,7 @@ namespace SocialGamification
 
            if (hash.ContainsKey("feedback") && hash["feedback"] != null)
            {
-               feedback = new GoalFeedback(hash["feedback"].ToString());
+               feedback = new GoalFeedback((Hashtable)hash["feedback"]);
            }
 
             if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
@@ -129,12 +132,80 @@ namespace SocialGamification
                     updatedTime = myDate;
                 }
             }
+
+            if (hash.ContainsKey("rewards") && hash["rewards"] != null && hash["rewards"] is ArrayList)
+            {
+                _rewards.Clear();
+                ArrayList listRewards = (ArrayList)hash["rewards"];
+                if (listRewards != null)
+                {
+                    foreach (Hashtable dataReward in listRewards)
+                    {
+                        _rewards.Add(new Reward(dataReward));
+                    }
+                }
+            }
+
+            if (hash.ContainsKey("targets") && hash["targets"] != null && hash["targets"] is ArrayList)
+            {
+                _targets.Clear();
+                ArrayList listTargets = (ArrayList)hash["targets"];
+                if (listTargets != null)
+                {
+                    foreach (Hashtable dataTarget in listTargets)
+                    {
+                        _targets.Add(new Target(dataTarget));
+                    }
+                }
+            }
+
+            if (hash.ContainsKey("activities") && hash["activities"] != null && hash["activities"] is ArrayList)
+            {
+                _activities.Clear();
+                ArrayList listActivities = (ArrayList)hash["activities"];
+                if (listActivities != null)
+                {
+                    foreach (Hashtable dataActivity in listActivities)
+                    {
+                        _activities.Add(new Activity(dataActivity));
+                    }
+                }
+            }
+
+            if (hash.ContainsKey("actions") && hash["actions"] != null && hash["actions"] is ArrayList)
+            {
+                _actions.Clear();
+                ArrayList listActions = (ArrayList)hash["actions"];
+                if (listActions != null)
+                {
+                    foreach (Hashtable dataAction in listActions)
+                    {
+                        _actions.Add(new Action(dataAction));
+                    }
+                }
+            }
+
+            if (hash.ContainsKey("roles") && hash["roles"] != null && hash["roles"] is ArrayList)
+            {
+                _roles.Clear();
+                ArrayList listRoles = (ArrayList)hash["roles"];
+                if (listRoles != null)
+                {
+                    foreach (Hashtable dataRole in listRoles)
+                    {
+                        _roles.Add(new Role(dataRole));
+                    }
+                }
+            }
         }
 
-
-        public static bool CheckTargetCompletion(List<Target> tars, Action<bool> callback)
+        /// <summary>
+		/// Check if all targets for this goal are set as complete
+		/// </summary>
+		/// <param name="callback">Callback.</param>
+        public bool CheckTargetCompletion(Action<bool> callback)
         {
-            foreach (Target t in tars)
+            foreach (Target t in targets)
             {
                 if (t.status == "Completed")
                 {
@@ -146,6 +217,131 @@ namespace SocialGamification
                 }
             }
             return true;
+        }
+
+        /// <summary>
+		/// Create a new goal
+		/// </summary>
+		/// <param name="callback">Callback.</param>
+        public static void CreateGoal(string description, string concernId, string rewardResourceId, string feedbackId, Action<Goal> callback)
+        {
+            if (creatingGoal)
+            {
+                callback(null);
+                return;
+            }
+            else
+            {
+                creatingGoal = true;
+            }
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("Description", description);
+            form.Add("ConcernId", concernId);
+            form.Add("RewardResourceId", rewardResourceId);
+            form.Add("FeedbackId", feedbackId);
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/goals"), form, (string text, string error) =>
+            {
+                creatingGoal = false;
+                Goal goal = null;
+
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+
+                    if (result != null)
+                    {
+                        if (result.ContainsKey("id"))
+                        {
+                            goal = new Goal(result);
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.Log(error);
+                }
+
+                if (callback != null)
+                {
+                    callback(goal);
+                }
+            });
+        }
+
+        /// <summary>
+		/// Get all goals for this activity
+		/// </summary>
+		/// <param name="callback">Callback.</param>
+        public static void GetActivityGoals(string id, Action<List<Goal>> callback)
+        {
+            if (loadingGoal)
+            {
+                callback(null);
+                return;
+            }
+            else
+            {
+                loadingGoal = true;
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/goals/" + id + "/activity"), form, (string text, string error) =>
+            {
+                loadingGoal = false;
+                List<Goal> listGoals = new List<Goal>();
+                ArrayList list = text.arrayListFromJson();
+                if (list != null)
+                {
+                    foreach (Hashtable data in list)
+                    {
+                        Goal goal = new Goal(data);
+
+                        // Add to the list
+                        listGoals.Add(goal);
+                    }
+                }
+                if (callback != null)
+                    callback(listGoals);
+            });
+        }
+
+        /// <summary>
+		/// Get the goal that matches the id
+		/// </summary>
+        /// <param name="idGoal">The ID of the goal</param>
+		/// <param name="callback">Callback.</param>
+        public static void GetGoal(string idGoal, Action<Goal> callback)
+        {
+            if (loadingGoal)
+            {
+                callback(null);
+                return;
+            }
+            else
+            {
+                loadingGoal = true;
+            }
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/goals/" + idGoal + "/detailed"), null, (string text, string error) =>
+            {
+                loadingGoal = false;
+                Goal goal = null;
+                Hashtable result = text.hashtableFromJson();
+
+                if (result != null)
+                {
+                    if (result.ContainsKey("id"))
+                    {
+                        goal = new Goal(result);
+                    }
+                    else
+                    {
+                        error = "API Response doesn't contact ID";
+                    }
+                }
+                if (callback != null)
+                    callback(goal);
+            });
         }
 
         /// <summary>

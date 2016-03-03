@@ -59,19 +59,19 @@ namespace SocialGamification
             {
                 return;
             }
-            if (hash.ContainsKey("id"))
+            if (hash.ContainsKey("id") && hash["id"] != null)
             {
                 id = hash["id"].ToString();
             }
-            if (hash.ContainsKey("value"))
+            if (hash.ContainsKey("value") && hash["value"] != null)
             {
                 float.TryParse(hash["value"].ToString(), out value);
             }
-            if (hash.ContainsKey("operation"))
+            if (hash.ContainsKey("operation") && hash["operation"] != null)
             {
                 operation = hash["operation"].ToString();
             }
-            if (hash.ContainsKey("status"))
+            if (hash.ContainsKey("status") && hash["status"] != null)
             {
                 status = hash["status"].ToString();
             }
@@ -81,7 +81,7 @@ namespace SocialGamification
             }
             if (hash.ContainsKey("attributeType") && hash["attributeType"] != null)
             {
-                attributeType = new AttributeType(hash["attributeType"].ToString());
+                attributeType = new AttributeType((Hashtable)hash["attributeType"]);
             }
             if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
             {

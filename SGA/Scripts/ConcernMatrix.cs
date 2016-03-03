@@ -55,17 +55,17 @@ namespace SocialGamification
             {
                 return;
             }
-            if (hash.ContainsKey("id"))
+            if (hash.ContainsKey("id") && hash["id"] != null)
             {
                 id = hash["id"].ToString();
             }
-            if (hash.ContainsKey("category"))
+            if (hash.ContainsKey("category") && hash["category"] != null)
             {
                 category = hash["category"].ToString();
             }
-            if (hash.ContainsKey("coordinates"))
+            if (hash.ContainsKey("coordinates") && hash["coordinates"] != null)
             {
-                coordinates = GetCoordinates(hash["coordinates"].ToString());
+                coordinates = GetCoordinates((Hashtable)hash["coordinates"]);
             }
             if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
             {
@@ -86,10 +86,9 @@ namespace SocialGamification
             }
         }
 
-        private Vector2 GetCoordinates(string coor)
+        private Vector2 GetCoordinates(Hashtable hash)
         {
             Vector2 returnV2 = Vector2.zero;
-            Hashtable hash = coor.hashtableFromJson();
             if (hash == null)
             {
                 return returnV2;

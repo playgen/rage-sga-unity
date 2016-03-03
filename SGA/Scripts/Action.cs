@@ -77,7 +77,7 @@ namespace SocialGamification
 
             if (hash.ContainsKey("activity") && hash["activity"] != null)
             {
-                activity = new Activity(hash["activity"].ToString());
+                activity = new Activity((Hashtable)hash["activity"]);
             }
 
             if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))

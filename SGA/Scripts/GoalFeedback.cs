@@ -58,23 +58,23 @@ namespace SocialGamification
             {
                 return;
             }
-            if (hash.ContainsKey("id"))
+            if (hash.ContainsKey("id") && hash["id"] != null)
             {
                 id = hash["id"].ToString();
             }
-            if (hash.ContainsKey("threshold"))
+            if (hash.ContainsKey("threshold") && hash["threshold"] != null)
             {
                 float.TryParse(hash["threshold"].ToString(), out threshold);
             }
-            if (hash.ContainsKey("direction"))
+            if (hash.ContainsKey("direction") && hash["direction"] != null)
             {
                 direction = hash["direction"].ToString();
             }
-            if (hash.ContainsKey("message"))
+            if (hash.ContainsKey("message") && hash["message"] != null)
             {
                 message = hash["message"].ToString();
             }
-            if (hash.ContainsKey("target"))
+            if (hash.ContainsKey("target") && hash["target"] != null)
             {
                 target = hash["target"].ToString();
             }

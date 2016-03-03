@@ -61,31 +61,31 @@ namespace SocialGamification
             {
                 return;
             }
-            if (hash.ContainsKey("id"))
+            if (hash.ContainsKey("id") && hash["id"] != null)
             {
                 id = hash["id"].ToString();
             }
-            if (hash.ContainsKey("relationship"))
+            if (hash.ContainsKey("relationship") && hash["relationship"] != null)
             {
                 relationship = hash["relationship"].ToString();
             }
-            if (hash.ContainsKey("concernChange"))
+            if (hash.ContainsKey("concernChange") && hash["concernChange"] != null)
             {
-                concernChange = GetCoordinates(hash["concernChange"].ToString());
+                concernChange = GetCoordinates((Hashtable)hash["concernChange"]);
             }
-            if (hash.ContainsKey("rewardResourceChange"))
+            if (hash.ContainsKey("rewardResourceChange") && hash["rewardResourceChange"] != null)
             {
-                rewardResourceChange = GetCoordinates(hash["rewardResourceChange"].ToString());
+                rewardResourceChange = GetCoordinates((Hashtable)hash["rewardResourceChange"]);
             }
-            if (hash.ContainsKey("actionId"))
+            if (hash.ContainsKey("actionId") && hash["actionId"] != null)
             {
                 actionId = hash["actionId"].ToString();
             }
             if (hash.ContainsKey("action") && hash["action"] != null)
             {
-                action = new Action(hash["action"].ToString());
+                action = new Action((Hashtable)hash["action"]);
             }
-            if (hash.ContainsKey("createdDate"))
+            if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
             {
                 DateTime myDate;
                 if (DateTime.TryParseExact(hash["createdDate"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture, DateTimeStyles.None, out myDate))
@@ -94,7 +94,7 @@ namespace SocialGamification
                 }
             }
 
-            if (hash.ContainsKey("updatedDate"))
+            if (hash.ContainsKey("updatedDate") && hash["updatedDate"] != null && !string.IsNullOrEmpty(hash["updatedDate"].ToString()))
             {
                 DateTime myDate;
                 if (DateTime.TryParseExact(hash["updatedDate"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture, DateTimeStyles.None, out myDate))
@@ -104,10 +104,9 @@ namespace SocialGamification
             }
         }
 
-        private Vector2 GetCoordinates(string coor)
+        private Vector2 GetCoordinates(Hashtable hash)
         {
             Vector2 returnV2 = Vector2.zero;
-            Hashtable hash = coor.hashtableFromJson();
             if (hash == null)
             {
                 return returnV2;
