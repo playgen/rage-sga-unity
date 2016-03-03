@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine;
 
 namespace SocialGamification
@@ -42,9 +43,37 @@ namespace SocialGamification
 
 		public bool searchingQuickMatch { get { return _quickMatch; } }
 
+        private bool matchDuplicate = false;
+        private bool matchFromHashtable = false;
+        private bool matchGetCurrentRound = false;
+        private bool matchEnd = false;
+        private bool matchScore = false;
+        private bool matchGetScore = false;
+        private bool matchSave = false;
+        private static bool matchDelete = false;
+        private static bool matchQuickMatch = false;
+        private static bool matchLoadTournament = false;
+        private static bool matchLoadMatch = false;
+
 		public Match()
 		{
 		}
+
+        public Match(Match clone)
+        {
+            this.id = clone.id;
+            this.idTournament = clone.idTournament;
+            this.title = clone.title;
+            this.roundsCount = clone.roundsCount;
+            this.currentRound = clone.currentRound;
+            this.dateCreation = clone.dateCreation;
+            this.dateExpire = clone.dateExpire;
+            this._deletedUsers = new List<string>(clone._deletedUsers);
+            this._users = new List<MatchActor>(clone._users);
+            this._rounds = new List<MatchRoundData>(clone._rounds);
+            this._finished = clone._finished;
+            this._quickMatch = clone._quickMatch;
+        }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SocialGamification.Match"/> class.
@@ -73,6 +102,40 @@ namespace SocialGamification
 			FromHashtable(jsonString.hashtableFromJson());
 		}
 
+        /// <summary>
+        /// Makes a copy of the current match
+        /// </summary>
+        public void Duplicate(Action<Match, bool, string> callback)
+        {
+            if (matchDuplicate)
+            {
+                callback(null,false, "already duplicating");
+                return;
+            }
+            else
+            {
+                matchDuplicate = true;
+            }
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("actors", _users.Select(user => user.idAccount).ToList().toArrayString());
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/actors"), form, (string text, string error) =>
+            {
+                matchDuplicate = false;
+                Hashtable hash = text.hashtableFromJson();
+                if (hash != null)
+                {
+                    Match match = new Match(hash);
+                    callback(match, true, error);
+                }
+                else
+                {
+                    callback(null, false, error);
+                }
+
+            });
+        }
+
 		/// <summary>
 		/// Initialize the object from a hashtable.
 		/// </summary>
@@ -84,7 +147,17 @@ namespace SocialGamification
 				return;
 			}
 
-			if (hash.ContainsKey("id") && hash["id"] != null)
+            if (matchFromHashtable)
+            {
+                Debug.Log("Already calling function FromHashTable");
+                return;
+            }
+            else
+            {
+                matchFromHashtable = true;
+            }
+
+            if (hash.ContainsKey("id") && hash["id"] != null)
 			{
 				id = hash["id"].ToString();
 			}
@@ -128,35 +201,80 @@ namespace SocialGamification
 				customData = (Hashtable)hash["customData"];
 			}
 
-			// Get list of Actors for this match
-			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id + "/actors"), null, (string text, string error) =>
-			{
-				if (string.IsNullOrEmpty(error))
-				{
-					_users.Clear();
-					_deletedUsers.Clear();
+            if (hash.ContainsKey("actors") && hash["actors"] != null && hash["actors"] is ArrayList)
+            {
+                _users.Clear();
+                ArrayList listActors = (ArrayList)hash["actors"];
+                if (listActors != null)
+                {
+                    foreach (Hashtable dataActor in listActors)
+                    {
+                        _users.Add(new MatchActor(dataActor));
+                    }
+                }
+            }
 
-					JSONObject j = new JSONObject(text);
-					foreach (JSONObject matchActor in j.list)
-					{
-						MatchActor actor = new MatchActor();
-						actor.id = matchActor["id"].str;
-						actor.idAccount = matchActor["actorId"].str;
-						actor.idMatch = matchActor["matchId"].str;
+            Debug.Log(_users.Count);
 
-						_users.Add(actor);
-					}
+            if (hash.ContainsKey("rounds") && hash["rounds"] != null && hash["rounds"] is ArrayList)
+            {
+                _rounds.Clear();
+                ArrayList listRounds = (ArrayList)hash["rounds"];
+                if (listRounds != null)
+                {
+                    List<MatchRound> _matchRounds = new List<MatchRound>();
+                    foreach (Hashtable dataRound in listRounds)
+                    {
+                        _matchRounds.Add(new MatchRound(dataRound));
+                    }
+                    MatchActor matchActor = _users.Find(u => u.idAccount.Equals(SocialGamificationManager.localUser.id));
+                    foreach (MatchRound mr in _matchRounds)
+                    {
+                        if (mr.idMatchActor == matchActor.id)
+                        {
+                            currentRound = mr.roundNumber;
+                        }
+                    }
+                    MatchRoundData mrd = new MatchRoundData();
+                    mrd.users = _users;
+                    mrd.scores = _matchRounds;
+                    _rounds.Add(mrd);
+                }
+            }
 
-					//FillRounds();
-					GetCurrentRound();
-				}
-			});
-		}
+            
 
-		/// <summary>
-		/// Fills the rounds from Match Accounts.
-		/// </summary>
-		private void FillRounds()
+            // Get list of Actors for this match
+            /*SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id + "/actors"), null, (string text, string error) =>
+            {
+                matchFromHashtable = false;
+                if (string.IsNullOrEmpty(error))
+                {
+                    _users.Clear();
+                    _deletedUsers.Clear();
+
+                    JSONObject j = new JSONObject(text);
+                    foreach (JSONObject matchActor in j.list)
+                    {
+                        MatchActor actor = new MatchActor();
+                        actor.id = matchActor["id"].str;
+                        actor.idAccount = matchActor["actorId"].str;
+                        actor.idMatch = matchActor["matchId"].str;
+
+                        _users.Add(actor);
+                    }
+
+                    //FillRounds();
+                    GetCurrentRound();
+                }
+                Debug.Log(_users.Count);
+            });*/
+        }
+
+        /// <summary>
+        /// Fills the rounds from Match Accounts.
+        /// </summary>
+        private void FillRounds()
 		{
 			_rounds.Clear();
 			for (int i = 0; i < roundsCount; ++i)
@@ -191,10 +309,20 @@ namespace SocialGamification
 		/// </summary>
 		private void GetCurrentRound()
 		{
+            if (matchGetCurrentRound)
+            {
+                Debug.Log("Already retriving current round");
+                return;
+            }
+            else
+            {
+                matchGetCurrentRound = true;
+            }
 			string myId = SocialGamificationManager.localUser.id;
 
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id + "/rounds"), null, (string text, string error) =>
 			{
+                matchGetCurrentRound = false;
 				//				bool success = false;
 				if (string.IsNullOrEmpty(error))
 				{
@@ -287,16 +415,26 @@ namespace SocialGamification
 		}
 
 		/// <summary>
-		/// End the current Match
+		/// Finish the current Match when a player quits
 		/// </summary>
-		public void End()
+		public void Quit()
 		{
+            if (matchEnd)
+            {
+                Debug.Log("Already Ending Match");
+                return;
+            }
+            else
+            {
+                matchEnd = true;
+            }
 			Dictionary<string, string> form = new Dictionary<string, string>();
 			form.Add("Id", id);
 			form.Add("TournamentId", idTournament);
 			form.Add("IsFinished", "true");
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id), form, (string text, string error) =>
 			{
+                matchEnd = false;
 				bool success = false;
 				if (string.IsNullOrEmpty(error))
 				{
@@ -310,23 +448,76 @@ namespace SocialGamification
 			}, "PUT");
 		}
 
-		/// <summary>
-		/// Send the specified score.
+        /// <summary>
+		/// End the current Match
 		/// </summary>
-		/// <param name="score">Score.</param>
-		/// <param name="callback">Callback.</param>
-		public void Score(float score, Action<bool, string> callback)
+		public void End()
+        {
+            if (matchEnd)
+            {
+                Debug.Log("Already Ending Match");
+                return;
+            }
+            else
+            {
+                matchEnd = true;
+            }
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("Id", id);
+            form.Add("TournamentId", idTournament);
+            form.Add("IsFinished", "true");
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id), form, (string text, string error) =>
+            {
+                matchEnd = false;
+                bool success = false;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result != null && result.ContainsKey("id"))
+                    {
+                        success = true;
+                    }
+                }
+                _finished = success;
+            }, "PUT");
+        }
+
+        /// <summary>
+        /// Send the specified score.
+        /// </summary>
+        /// <param name="score">Score.</param>
+        /// <param name="callback">Callback.</param>
+        public void Score(float score, Action<bool, string> callback)
 		{
+            if (matchScore)
+            {
+                if (callback != null)
+                {
+                    callback(false, "Already updating score");
+                }
+                return;
+            }
+            else
+            {
+                matchScore = true;
+            }
+
 			if (_finished)
 			{
-				if (callback != null)
-					callback(false, "This Match is already finished");
+                if (callback != null)
+                {
+                    callback(false, "This Match is already finished");
+                }
 				return;
 			}
 
 			if (_users.Count < 1)
 			{
-				callback(false, "No Users found for this Match");
+                if (callback != null)
+                {
+                    callback(false, "No Users found for this Match");
+                }
+                return;
 			}
 
 			string myId = SocialGamificationManager.localUser.id;
@@ -338,14 +529,15 @@ namespace SocialGamification
 			form.Add("RoundNumber", currentRound.ToString());
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id + "/rounds"), form, (string text, string error) =>
 			  {
-				  Debug.Log("Score Text: " + text);
+                  matchScore = false;
+				  //Debug.Log("Score Text: " + text);
 				  bool success = false;
 				  if (string.IsNullOrEmpty(error))
 				  {
 					  Hashtable result = text.hashtableFromJson();
 					  if (result != null)
 					  {
-						  if (result.ContainsKey("id") && result["id"] != null)
+						  if (result.ContainsKey("actorId") && result["actorId"] != null)
 						  {
 							  success = true;
 
@@ -369,6 +561,15 @@ namespace SocialGamification
 		/// <param name="callback">Callback.</param>
 		public void GetScore(Action<bool, float, float, string> callback)
 		{
+            if (matchGetScore)
+            {
+                callback(false, 0, 0, "Already retrieving score");
+            }
+            else
+            {
+                matchGetScore = true;
+            }
+
 			if (_users.Count < 1)
 			{
 				callback(false, 0, 0, "No Users found for this Match");
@@ -378,6 +579,7 @@ namespace SocialGamification
 
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + id + "/rounds"), null, (string text, string error) =>
 			{
+                matchGetScore = false;
 				bool success = false;
 				float opponentScore = 0;
 				float myScore = 0;
@@ -429,10 +631,25 @@ namespace SocialGamification
 		/// <param name="callback">Callback.</param>
 		public void Save(Action<bool, string> callback)
 		{
+            if (matchSave)
+            {
+                if (callback != null)
+                {
+                    callback(false, "Save function already being called");
+                }
+                return;
+            }
+            else
+            {
+                matchSave = true;
+            }
+
 			if (_users.Count < 2)
 			{
-				if (callback != null)
-					callback(false, "A match requires at least 2 users");
+                if (callback != null)
+                {
+                    callback(false, "A match requires at least 2 users");
+                }
 				return;
 			}
 
@@ -467,6 +684,7 @@ namespace SocialGamification
 
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("match.php"), form, (string text, string error) =>
 			{
+                matchSave = false;
 				bool success = false;
 				if (string.IsNullOrEmpty(error))
 				{
@@ -501,11 +719,25 @@ namespace SocialGamification
 		/// <param name="callback">Callback.</param>
 		public static void Delete(string idMatch, Action<bool, string> callback)
 		{
+            if (matchDelete)
+            {
+                if (callback != null)
+                {
+                    callback(false, "Delete already being called");
+                    return;
+                }
+            }
+            else
+            {
+                matchDelete = true;
+            }
+
 			Dictionary<string, string> form = new Dictionary<string, string>();
 			form.Add("action", "match_delete");
 			form.Add("Id", idMatch.ToString());
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("match.php"), form, (string text, string error) =>
 			{
+                matchDelete = false;
 				bool success = false;
 				if (string.IsNullOrEmpty(error))
 				{
@@ -529,6 +761,17 @@ namespace SocialGamification
 		/// <param name="callback">Callback.</param>
 		public static void QuickMatch(bool friendsOnly, SearchCustomData[] customData, int rounds, Action<Match> callback)
 		{
+            if (matchQuickMatch)
+            {
+                //Debug.Log("QuickMatch function already being called");
+                callback(null);
+                return;
+            }
+            else
+            {
+                matchQuickMatch = true;
+            }
+
 			Dictionary<string, string> form = new Dictionary<string, string>();
 			form.Add("Friends", friendsOnly ? "1" : "0");
 
@@ -591,6 +834,7 @@ namespace SocialGamification
 
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches"), form, (string text, string error) =>
 			{
+                matchQuickMatch = false;
 				Match match = null;
 
 				if (string.IsNullOrEmpty(error))
@@ -617,15 +861,76 @@ namespace SocialGamification
 			});
 		}
 
-		/// <summary>
-		/// Load the list of Matchs by specified filters.
+        /// <summary>
+		/// Load the list of ongoing Matches by specified filters.
 		/// </summary>
 		/// <param name="idTournament">Identifier tournament.</param>
 		/// <param name="activeOnly">If set to <c>true</c> then displays active matches only, else archived matches.</param>
 		/// <param name="title">Title.</param>
 		/// <param name="callback">Callback.</param>
-		public static void Load(string idTournament, bool activeOnly, string title, Action<Match[]> callback)
+		public static void LoadOngoing(string idTournament, bool activeOnly, string title, Action<Match[]> callback)
+        {
+            if (matchLoadTournament)
+            {
+
+                callback(null);
+                return;
+            }
+            else
+            {
+                matchLoadTournament = true;
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+
+            //form.Add("action", "match_list");
+            //if (!activeOnly)
+            //	form.Add("Active", "0");
+            if (idTournament != "0")
+                form.Add("IdTournament", idTournament);
+            if (!string.IsNullOrEmpty(title))
+                form.Add("Title", title);
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/ongoing"), form, (string text, string error) =>
+            {
+                matchLoadTournament = false;
+                List<Match> listMatches = new List<Match>();
+                ArrayList list = text.arrayListFromJson();
+                if (list != null)
+                {
+                    foreach (Hashtable data in list)
+                    {
+                        // Create a new object from the result
+                        Match match = new Match(data);
+
+                        // Add to the list
+                        listMatches.Add(match);
+                    }
+                }
+                if (callback != null)
+                    callback(listMatches.ToArray());
+            });
+        }
+
+        /// <summary>
+        /// Load the list of Matchs by specified filters.
+        /// </summary>
+        /// <param name="idTournament">Identifier tournament.</param>
+        /// <param name="activeOnly">If set to <c>true</c> then displays active matches only, else archived matches.</param>
+        /// <param name="title">Title.</param>
+        /// <param name="callback">Callback.</param>
+        public static void Load(string idTournament, bool activeOnly, string title, Action<Match[]> callback)
 		{
+            if (matchLoadTournament)
+            {
+               
+                callback(null);
+                return;
+            }
+            else
+            {
+                matchLoadTournament = true;
+            }
+
 			Dictionary<string, string> form = new Dictionary<string, string>();
 
 			//form.Add("action", "match_list");
@@ -637,6 +942,7 @@ namespace SocialGamification
 				form.Add("Title", title);
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches"), form, (string text, string error) =>
 			{
+                matchLoadTournament = false;
 				List<Match> listMatches = new List<Match>();
 				ArrayList list = text.arrayListFromJson();
 				if (list != null)
@@ -655,19 +961,31 @@ namespace SocialGamification
 			});
 		}
 
-		/// <summary>
-		/// Load the specified Match. Or any created match with myself if ID == 0
-		/// </summary>
-		/// <param name="idMatch">Identifier match.</param>
-		/// <param name="callback">Callback.</param>
-		public static void Load(string idMatch, Action<Match> callback)
+        /// <summary>
+        /// Load the specified Match. Or any created match with myself if ID == 0
+        /// </summary>
+        /// <param name="idMatch">Identifier match.</param>
+        /// <param name="callback">Callback.</param>
+        public static void Load(string idMatch, Action<Match> callback)
 		{
+            if (matchLoadMatch)
+            {
+                //Debug.Log("ALready Loading match");
+                callback(null);
+                return;
+            }
+            else
+            {
+                matchLoadMatch = true;
+            }
+
 			Dictionary<string, string> form = new Dictionary<string, string>();
 			if (idMatch != "0")
 				form.Add("Id", idMatch);
 			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches"), form, (string text, string error) =>
-			{
-				Match match = null;
+            {
+                matchLoadMatch = false;
+                Match match = null;
 				Hashtable result = text.hashtableFromJson();
 
 				if (result != null)
