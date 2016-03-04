@@ -15,6 +15,8 @@ namespace SocialGamification
         public DateTime? updatedTime = null;
         public DateTime? createdTime = null;
 
+        private static bool loadingRole = false;
+
         public Role()
         {
         }
@@ -85,6 +87,40 @@ namespace SocialGamification
                     updatedTime = myDate;
                 }
             }
+        }
+
+        public static void GetRole(string idRole, Action<Role> callback)
+        {
+            if (loadingRole)
+            {
+                callback(null);
+                return;
+            }
+            else
+            {
+                loadingRole = true;
+            }
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/roles/" + idRole), null, (string text, string error) =>
+            {
+                loadingRole = false;
+                Role role = null;
+                Hashtable result = text.hashtableFromJson();
+
+                if (result != null)
+                {
+                    if (result.ContainsKey("id"))
+                    {
+                        role = new Role(result);
+                    }
+                    else
+                    {
+                        error = "API Response doesn't contact ID";
+                    }
+                }
+                if (callback != null)
+                    callback(role);
+            });
         }
     }
 }

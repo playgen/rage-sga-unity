@@ -22,6 +22,8 @@ namespace SocialGamification
         private List<Role> _roles = new List<Role>();
         public List<Role> roles { get { return _roles; } }
 
+        private static bool loadingActivity = false;
+
         public Activity()
         {
         }
@@ -96,6 +98,40 @@ namespace SocialGamification
                     updatedTime = myDate;
                 }
             }
+        }
+
+        public static void GetActivity(string idActivity, Action<Activity> callback)
+        {
+            if (loadingActivity)
+            {
+                callback(null);
+                return;
+            }
+            else
+            {
+                loadingActivity = true;
+            }
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/activities/" + idActivity), null, (string text, string error) =>
+            {
+                loadingActivity = false;
+                Activity activity = null;
+                Hashtable result = text.hashtableFromJson();
+
+                if (result != null)
+                {
+                    if (result.ContainsKey("id"))
+                    {
+                        activity = new Activity(result);
+                    }
+                    else
+                    {
+                        error = "API Response doesn't contact ID";
+                    }
+                }
+                if (callback != null)
+                    callback(activity);
+            });
         }
     }
 }
