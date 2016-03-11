@@ -269,10 +269,10 @@ namespace SocialGamification
         }
 
         /// <summary>
-		/// Get all goals for this activity
+		/// Get all goals for this role
 		/// </summary>
 		/// <param name="callback">Callback.</param>
-        public static void GetActivityGoals(string id, Action<List<Goal>> callback)
+        public static void GetRoleGoals(string id, Action<List<Goal>> callback)
         {
             if (loadingGoal)
             {
@@ -285,7 +285,7 @@ namespace SocialGamification
             }
 
             Dictionary<string, string> form = new Dictionary<string, string>();
-            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/goals/" + id + "/activity"), form, (string text, string error) =>
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/goals/" + id + "/role"), form, (string text, string error) =>
             {
                 loadingGoal = false;
                 List<Goal> listGoals = new List<Goal>();

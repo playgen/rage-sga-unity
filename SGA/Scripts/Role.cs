@@ -12,6 +12,8 @@ namespace SocialGamification
         public string id = "";
         public string name = "";
         public string description = "";
+        public string activityId;
+        public Activity activity;
         public DateTime? updatedTime = null;
         public DateTime? createdTime = null;
 
@@ -69,6 +71,15 @@ namespace SocialGamification
             if (hash.ContainsKey("description") && hash["description"] != null)
             {
                 description = hash["description"].ToString();
+            }
+            if (hash.ContainsKey("activityId") && hash["activityId"] != null)
+            {
+              activityId = hash["activityId"].ToString();
+            }
+
+            if (hash.ContainsKey("activity") && hash["activity"] != null)
+            {
+              activity = new Activity((Hashtable)hash["activity"]);
             }
             if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
             {

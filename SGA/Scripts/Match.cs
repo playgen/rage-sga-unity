@@ -214,8 +214,6 @@ namespace SocialGamification
                 }
             }
 
-            Debug.Log(_users.Count);
-
             if (hash.ContainsKey("rounds") && hash["rounds"] != null && hash["rounds"] is ArrayList)
             {
                 _rounds.Clear();
