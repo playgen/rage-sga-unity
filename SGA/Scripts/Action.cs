@@ -102,9 +102,9 @@ namespace SocialGamification
         /// Pushes a new Action
         /// </summary>
         /// <param name="callback">Callback.</param>
-        public static Action Push(string newVerb, Action<Action> callback)
+        public static Reward Push(string newVerb, Action<Reward> callback)
         {
-            Action action = null;
+            Reward reward = null;
             Dictionary<string, string> form = new Dictionary<string, string>();
             form.Add("Verb", newVerb);
             SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/actions"), form, (string text, string error) =>
@@ -118,7 +118,7 @@ namespace SocialGamification
                     {
                         if (result.ContainsKey("id"))
                         {
-                            action = new Action(result);
+                            reward = new Reward(result);
                         }
                         else
                         {
@@ -129,10 +129,10 @@ namespace SocialGamification
 
                 if (callback != null)
                 {
-                    callback(action);
+                    callback(reward);
                 }
             });
-            return action;
+            return reward;
         }
 
         /// <summary>
