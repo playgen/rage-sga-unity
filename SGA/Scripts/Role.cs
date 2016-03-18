@@ -112,7 +112,7 @@ namespace SocialGamification
                 loadingRole = true;
             }
 
-            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/roles/" + idRole), null, (string text, string error) =>
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/roles/" + idRole + "/name"), null, (string text, string error) =>
             {
                 loadingRole = false;
                 Role role = null;

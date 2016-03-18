@@ -107,7 +107,7 @@ namespace SocialGamification
             Reward reward = null;
             Dictionary<string, string> form = new Dictionary<string, string>();
             form.Add("Verb", newVerb);
-            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/actions"), form, (string text, string error) =>
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/actions/send"), form, (string text, string error) =>
             {
 
                 if (string.IsNullOrEmpty(error))
