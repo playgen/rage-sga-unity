@@ -977,10 +977,7 @@ namespace SocialGamification
                 matchLoadMatch = true;
             }
 
-			Dictionary<string, string> form = new Dictionary<string, string>();
-			if (idMatch != "0")
-				form.Add("Id", idMatch);
-			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches"), form, (string text, string error) =>
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + idMatch), null, (string text, string error) =>
             {
                 matchLoadMatch = false;
                 Match match = null;
