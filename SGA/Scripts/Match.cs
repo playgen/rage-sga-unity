@@ -778,9 +778,11 @@ namespace SocialGamification
                 if (string.IsNullOrEmpty(error))
                 {
                     Hashtable result = text.hashtableFromJson();
-                    if (result.ContainsKey("id") && result["id"] != null)
+                    if (result.Keys.Count > 0 && result.ContainsKey("id") && result["id"] != null)
                     {
                         customResult = (result["value"].ToString());
+                    } else {
+                        error = "Data not found";
                     }
                 }
                 if (callback != null)
