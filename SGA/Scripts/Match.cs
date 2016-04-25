@@ -1065,7 +1065,7 @@ namespace SocialGamification
                 matchLoadMatch = true;
             }
 
-			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + idMatch), null, (string text, string error) =>
+			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + idMatch + "/detailed"), null, (string text, string error) =>
             {
                 matchLoadMatch = false;
                 Match match = null;
