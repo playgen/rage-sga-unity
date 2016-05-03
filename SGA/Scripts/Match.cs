@@ -702,10 +702,98 @@ namespace SocialGamification
 			});
 		}
 
-		/// <summary>
-		/// Delete this instance from the database.
+        /// <summary>
+		/// Update or create custom data for this match, whether id is positive and greater than zero.
 		/// </summary>
-		public virtual void Delete(Action<bool, string> callback)
+		/// <param name="callback">Callback.</param>
+		public virtual void UpdateCustom(Hashtable custom, Action<bool, string> callback)
+        {
+            if (!SocialGamificationManager.isInitialized)
+            {
+                throw new Exception("SocialGamification Manager not initialized");
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new Exception("Match id is not valid");
+            }
+            
+            string urlString = "api/matches/" + id + "/custom";
+            string requestType = "PUT";
+            
+            form.Add("CustomData", custom.toCustomDataJson());
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl(urlString), form, (string text, string error) =>
+            {
+                bool success = false;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result != null)
+                    {
+                        success = result.ContainsKey("id") && result["id"] != null;
+                        if (success)
+                        {
+                            FromJson(result.ToString());
+                        }
+                        else
+                        {
+                            error = "API Response doesn't contact ID";
+                        }
+                    }
+                }
+                if (callback != null)
+                    callback(success, error);
+            }, requestType);
+        }
+
+        /// <summary>
+		/// Get custom data for this match by key
+		/// </summary>
+		/// <param name="callback">Callback.</param>
+		public virtual void MatchCustomSearch(string customKey, Action<string, string> callback)
+        {
+            if (!SocialGamificationManager.isInitialized)
+            {
+                throw new Exception("SocialGamification Manager not initialized");
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new Exception("Match id is not valid");
+            }
+
+            string urlString = "api/matches/" + id + "/customload";
+            string requestType = "PUT";
+
+            form.Add("verb", customKey);
+            
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl(urlString), form, (string text, string error) =>
+            {
+                string customResult = null;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result.Keys.Count > 0 && result.ContainsKey("id") && result["id"] != null)
+                    {
+                        customResult = (result["value"].ToString());
+                    } else {
+                        error = "Data not found";
+                    }
+                }
+                if (callback != null)
+                    callback(customResult, error);
+            }, requestType);
+        }
+
+        /// <summary>
+        /// Delete this instance from the database.
+        /// </summary>
+        public virtual void Delete(Action<bool, string> callback)
 		{
 			Delete(id, callback);
 		}
@@ -976,8 +1064,7 @@ namespace SocialGamification
             {
                 matchLoadMatch = true;
             }
-
-            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + idMatch), null, (string text, string error) =>
+			SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/" + idMatch + "/detailed"), null, (string text, string error) =>
             {
                 matchLoadMatch = false;
                 Match match = null;
