@@ -206,6 +206,8 @@ namespace SocialGamification
 		/// </summary>
 		public string urlRootStage;
 
+        public int urlPort;
+
 		/// <summary>
 		/// If <em>true</em> sets the stage as current environment (default: false for production).
 		/// </summary>
@@ -694,10 +696,19 @@ namespace SocialGamification
 		/// <param name='relativeUrl'>
 		/// Relative URL.
 		/// </param>
+        /// 
+        public void SetUrlExternal(string url) {
+            urlRootStage = url + ":" + urlPort;
+        }
+
 		public string GetUrl(string relativeUrl)
 		{
-			Uri uri = new Uri(new Uri(useStage ? urlRootStage : urlRootProduction), relativeUrl);
-			return uri.ToString();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Application.ExternalEval("SendMessage('SocialGamificationManager', 'SetUrlExternal', window.location.protocol + '//' + window.location.hostname);");
+#endif
+            Uri uri = new Uri(new Uri(useStage ? urlRootStage : urlRootProduction), relativeUrl);
+
+            return uri.ToString();
 		}
 
 		/// <summary>
