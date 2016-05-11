@@ -60,7 +60,7 @@ namespace SocialGamification
 			{
 				int.TryParse(hash["roundNumber"].ToString(), out roundNumber);
 			}
-			if (hash.ContainsKey("dateScore") && hash["dateScore"] != null && !string.IsNullOrEmpty(hash["DateScore"].ToString()))
+			if (hash.ContainsKey("dateScore") && hash["dateScore"] != null && !string.IsNullOrEmpty(hash["dateScore"].ToString()))
 			{
 				DateTime myDate;
 				if (DateTime.TryParseExact(hash["dateScore"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture, DateTimeStyles.None, out myDate))
