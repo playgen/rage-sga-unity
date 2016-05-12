@@ -264,11 +264,51 @@ namespace SocialGamification
 			}, requestType);
 		}
 
-		/// <summary>
-		/// Delete this instance from the server.
+        /// <summary>
+		/// Update or Create this user to server, whether id is positive and greater than zero.
 		/// </summary>
 		/// <param name="callback">Callback.</param>
-		public virtual void Delete(System.Action<bool, string> callback)
+		public static void UpdateCustom(Hashtable providedData, string id, System.Action<bool, string> callback)
+        {
+            if (!SocialGamificationManager.isInitialized)
+            {
+                throw ExceptionSocialGamificationNotInitialized;
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+
+            string urlString = "api/players/";
+            string requestType = "PUT";
+
+            urlString += id;
+
+            form.Add("CustomData", providedData.toCustomDataJson());
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl(urlString), form, (string text, string error) =>
+            {
+                bool success = false;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result != null)
+                    {
+                        success = result.ContainsKey("id") && result["id"] != null;
+                        if (!success)
+                        {
+                            error = "API Response doesn't contact ID";
+                        }
+                    }
+                }
+                if (callback != null)
+                    callback(success, error);
+            }, requestType);
+        }
+
+        /// <summary>
+        /// Delete this instance from the server.
+        /// </summary>
+        /// <param name="callback">Callback.</param>
+        public virtual void Delete(System.Action<bool, string> callback)
 		{
 			Delete(userName, password, callback);
 		}
