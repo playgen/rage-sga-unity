@@ -118,6 +118,7 @@ namespace SocialGamification
             }
             Dictionary<string, string> form = new Dictionary<string, string>();
             form.Add("actors", _users.Select(user => user.idAccount).ToList().toArrayString());
+            form.Add("Rounds", roundsCount.ToString());
 
             SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl("api/matches/actors"), form, (string text, string error) =>
             {
@@ -860,9 +861,10 @@ namespace SocialGamification
 
 			Dictionary<string, string> form = new Dictionary<string, string>();
 			form.Add("Friends", friendsOnly ? "1" : "0");
+            form.Add("Rounds", rounds.ToString());
 
-			// Build the JSON string for CustomData filtering
-			string searchCustomData = "";
+            // Build the JSON string for CustomData filtering
+            string searchCustomData = "";
 			if (customData != null)
 			{
 				ArrayList list = new ArrayList();
