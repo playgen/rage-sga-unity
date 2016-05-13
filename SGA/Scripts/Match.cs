@@ -178,9 +178,9 @@ namespace SocialGamification
 				int.TryParse(hash["totalRounds"].ToString(), out roundsCount);
 			}
 
-			if (hash.ContainsKey("dateCreation") && hash["dateCreation"] != null && !string.IsNullOrEmpty(hash["dateCreation"].ToString()))
+			if (hash.ContainsKey("createdDate") && hash["createdDate"] != null && !string.IsNullOrEmpty(hash["createdDate"].ToString()))
 			{
-				DateTime.TryParseExact(hash["dateCreation"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture, DateTimeStyles.None, out dateCreation);
+				DateTime.TryParseExact(hash["createdDate"].ToString(), "yyyy-MM-ddTHH:mm:ss", CultureInfo.CurrentCulture, DateTimeStyles.None, out dateCreation);
 			}
 
 			if (hash.ContainsKey("dateExpire") && hash["dateExpire"] != null && !string.IsNullOrEmpty(hash["dateExpire"].ToString()))
