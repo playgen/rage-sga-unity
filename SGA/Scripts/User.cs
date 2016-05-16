@@ -305,6 +305,44 @@ namespace SocialGamification
         }
 
         /// <summary>
+		/// Get custom data for this user by key
+		/// </summary>
+		/// <param name="callback">Callback.</param>
+		public virtual void CustomSearch(string customKey, System.Action<Hashtable, string> callback)
+        {
+            if (!SocialGamificationManager.isInitialized)
+            {
+                throw ExceptionSocialGamificationNotInitialized;
+            }
+
+            Dictionary<string, string> form = new Dictionary<string, string>();
+
+            string urlString = "api/players/" + id + "/custom";
+            string requestType = "PUT";
+
+            form.Add("verb", customKey);
+
+            SocialGamificationManager.instance.CallWebservice(SocialGamificationManager.instance.GetUrl(urlString), form, (string text, string error) =>
+            {
+                Hashtable customResult = null;
+                if (string.IsNullOrEmpty(error))
+                {
+                    Hashtable result = text.hashtableFromJson();
+                    if (result.Keys.Count > 0 && result.ContainsKey("id") && result["id"] != null)
+                    {
+                        customResult = result;
+                    }
+                    else
+                    {
+                        error = "Data not found";
+                    }
+                }
+                if (callback != null)
+                    callback(customResult, error);
+            }, requestType);
+        }
+
+        /// <summary>
         /// Delete this instance from the server.
         /// </summary>
         /// <param name="callback">Callback.</param>
