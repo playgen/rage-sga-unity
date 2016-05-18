@@ -178,7 +178,7 @@ namespace SocialGamification
 		/// Gets a value indicating whether the Singleton instance of <see cref="SocialGamification.SocialGamificationManager"/> is initialized.
 		/// </summary>
 		/// <value><c>true</c> if is initialized; otherwise, <c>false</c>.</value>
-		public static bool isInitialized { get { return (_instance != null && _instance._serverInfo != null); } }
+		public static bool isInitialized { get { return (_instance != null && _instance._serverInfo != null && !string.IsNullOrEmpty(_instance._serverInfo.version)); } }
 
 		/// <summary>
 		/// Should call DontDestroyOnLoad on the SocialGamificationManager gameObject?
