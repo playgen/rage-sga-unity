@@ -328,7 +328,7 @@ namespace SocialGamification
                 if (string.IsNullOrEmpty(error))
                 {
                     Hashtable result = text.hashtableFromJson();
-                    if (result.Keys.Count > 0 && result.ContainsKey("id") && result["id"] != null)
+                    if (result != null && result.Keys.Count > 0 && result.ContainsKey("id") && result["id"] != null)
                     {
                         customResult = result;
                     }
