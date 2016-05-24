@@ -45,7 +45,7 @@ MonoBehaviour:
   urlRootProduction: https://sga.playgen.com:443
   urlRootStage: https://localhost:8064
   urlPort: 8064
-  useStage: 0
+  useStage: 1
   logDebugInfo: 0
   pingIntervalSeconds: 30
   onlineSeconds: 120
