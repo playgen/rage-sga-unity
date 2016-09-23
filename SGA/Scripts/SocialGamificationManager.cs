@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
-using UnityEngine.Experimental.Networking;
+using UnityEngine.Networking;
 using UnityEngine.SocialPlatforms;
 
 namespace SocialGamification
@@ -706,7 +706,7 @@ namespace SocialGamification
 #if UNITY_WEBGL && !UNITY_EDITOR
             Application.ExternalEval("SendMessage('SocialGamificationManager', 'SetUrlExternal', window.location.protocol + '//' + window.location.hostname);");
 #endif
-            Uri uri = new Uri(new Uri(useStage ? urlRootStage : urlRootProduction), relativeUrl);
+			Uri uri = new Uri(new Uri(useStage ? urlRootStage : urlRootProduction), relativeUrl);
 
             return uri.ToString();
 		}
